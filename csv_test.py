@@ -1,8 +1,9 @@
 from __future__ import print_function
 import codecs
 from os import listdir, makedirs
-from os.path import isdir, join
+from os.path import basename, isdir, join, splitext
 from shutil import rmtree
+from xlsxwriter import Workbook
 
 ERRORS_DIR = '/tmp/sg2ps_tests/result'
 ETALON_DIR = '/home/ali/sg2ps_tests/etalon'
@@ -15,34 +16,57 @@ TO_TYPE = { 's' : str,
           }
 ENCODING = 'ascii'
 
+errors = { }
+passed = [ ]
+
 def main():
     setup_errors_dir()
-    etalon_filenames = get_all_filenames(ETALON_DIR, EXTENSION)
-    for etalon in etalon_filenames:
-        check_file(etalon)
-
-def check_file(filename):
-    header, lines = read_csv(filename)
-    col_types = get_col_types(header)
-    if col_types is None:
-        return
-    # check row length!!!
-    type_errors, table = convert(col_types, lines)
-    if type_errors:
-        write_cell_errors(filename, header, lines, type_errors)
-        return
-    return table
-       
-#-------------------------------------------------------------------------------
+    for filename in files_to_check():
+        etalon = get_content(ETALON_DIR, filename, 'etalon')
+        if etalon is None:
+            continue
+        tocomp = get_content(TOCOMP_DIR, filename, 'test')
+        if tocomp is None:
+            continue
+        mismatch = compare(etalon, tocomp)
+        if mismatch:
+            errors[filename] = 'mismatch, excel sheet written'
+            write_mismatch(filename, etalon, tocomp, mismatch)
+        else:
+            passed.append(filename)
+    show_summary()
 
 def setup_errors_dir():
     if isdir(ERRORS_DIR):
         rmtree(ERRORS_DIR)
     makedirs(ERRORS_DIR)
 
-def get_all_filenames(directory, extension):
-    files = sorted(f for f in listdir(directory) if f.endswith(extension))
-    return [ join(directory, filename) for filename in files ]
+def files_to_check():
+    etalons = { f for f in listdir(ETALON_DIR) if f.endswith(EXTENSION) }
+    tocomps = { f for f in listdir(TOCOMP_DIR) if f.endswith(EXTENSION) }
+    etalon_only = etalons - tocomps
+    tocomp_only = tocomps - etalons
+    for e in etalon_only:
+        errors[e] = 'only etalon found'
+    for t in tocomp_only:
+        errors[t] = 'missing etalon'
+    return sorted(etalons & tocomps)
+
+def get_content(directory, filename, kind):
+    header, lines = read_csv(join(directory,filename))
+    col_types, error_msg = get_col_types(header)
+    if error_msg:
+        errors[filename] = '{}, header: {}'.format(kind, error_msg)
+        return
+    # FIXME check row length == header length!
+    type_errors, table = convert(col_types, lines)
+    if type_errors:
+        msg = '{}, type conversion error, excel sheet written'.format(kind)
+        errors[filename] = msg
+        xlsxname = get_filebase(filename) + '_'+kind+'_type_error.xlsx'
+        write_cell_errors(xlsxname, header, lines, type_errors)
+        return
+    return header, table
 
 def read_csv(filename):
     print()
@@ -58,19 +82,18 @@ def extract_first_line(f):
     return split(header) if header else [ ]
 
 def split(line):
-    return line.rstrip('\r\n').split(SEP)    
+    return line.rstrip('\r\n').split(SEP)
 
 def get_col_types(header):
     if len(header)==0:
-        print('Missing header!')
-        return
+        return None, 'missing'
     col_types = [ TO_TYPE.get(col[-1], None) for col in header ]
     for i, typ in enumerate(col_types):
         if typ is None:
-            print('Unrecognized type in column {}: "{}"'.format(i+1, header[i]))
-            return
+            msg = 'unrecognized type in column {}: "{}"'.format(i+1, header[i])
+            return None, msg
     assert len(col_types)==len(header)
-    return col_types
+    return col_types, None
 
 def convert(col_types, lines):
     type_errors, table = [ ], [ ]
@@ -85,14 +108,42 @@ def convert(col_types, lines):
         assert len(row)==len(col_types)
         table.append(row)
     if type_errors:
-        print('There were type conversion errors!')
         table = None
     return type_errors, table
 
-def write_cell_errors(filename, header, lines, cells_to_mark):
-    for cell in cells_to_mark:
-        print(cell)
-    return
+def get_filebase(path):
+    return splitext(basename(path))[0]
+
+def write_cell_errors(xlsxname, header, lines, cells_to_mark):
+    workbook  = Workbook(join(ERRORS_DIR, xlsxname))
+    cell_fmt  = workbook.add_format()
+    worksheet = workbook.add_worksheet()
+    cell_fmt.set_bg_color('cyan')
+    formatter = { cell : cell_fmt for cell in cells_to_mark }
+    worksheet.write_row(0, 0, header)
+    for i, line in enumerate(lines):
+        for j, item in enumerate(line):
+            worksheet.write(i+1, j, item, formatter.get((i,j), None))
+    workbook.close()
+
+def compare(etalon, tocomp):
+    pass
+
+def write_mismatch(filename, etalon, tocomp, mismatch):
+    pass
+
+def show_summary():
+    print('-------------------------------------------------------------------')
+    if passed:
+        print('Passed: {} tests'.format(len(passed)))
+    if errors:
+        msgs = sorted( errors.iteritems() )
+        print('There were errors:')
+        for fname, msg in msgs:
+            print('  {}: {}'.format(fname,msg))
+        print('Tests FAILED!')
+    else:
+        print('Tests PASSED!')
 
 if __name__ == '__main__':
     main()
