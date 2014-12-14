@@ -1,45 +1,56 @@
+#!/usr/bin/env python
 from __future__ import print_function
 import codecs
+from itertools import izip, izip_longest
+from math import isnan
 from os import listdir, makedirs
 from os.path import basename, isdir, join, splitext
 from shutil import rmtree
 from xlsxwriter import Workbook
 
-ERRORS_DIR = '/tmp/sg2ps_tests/result'
+# The directory with the expected output (etalon CSV files).
 ETALON_DIR = '/home/ali/sg2ps_tests/etalon'
+
+# The directory with the CSV files that should be compared to the etalon CSVs.
+#TOCOMP_DIR = '/home/ali/sg2ps_tests/etalon'
 TOCOMP_DIR = '/home/ali/sg2ps_tests/to_compare'
+
+# Extension of the input CSV files (both the etalon and the test files). All 
+# other file types will be ignored in the comparison.
 EXTENSION  = '.csv'
+
+# Separator in the input CSV files.
 SEP  = ','
+
+# The spreadsheets show where the errors were detected.
+# Careful: The contents of this directory will be deleted on startup!
+SPREADSHEETS_DIR = '/tmp/sg2ps_tests/result'
+
+# The last character of the column name encodes the type. Here we map that 
+# charater to a type.
 TO_TYPE = { 's' : str,
             'i' : int,
-            'd' : float,
-          }
-ENCODING = 'ascii'
+            'd' : float } # NaN should be represented by the string NaN
 
+# Thresholds in floating point comparison
+REL_TOL = 1.0e-5
+ABS_TOL = 1.0e-5
+
+#-------------------------------------------------------------------------------
+# Normally, there should be no need to modify anything below.
+
+ENCODING = 'ascii'
 errors = { }
-passed = [ ]
 
 def main():
-    setup_errors_dir()
-    for filename in files_to_check():
-        etalon = get_content(ETALON_DIR, filename, 'etalon')
-        if etalon is None:
-            continue
-        tocomp = get_content(TOCOMP_DIR, filename, 'test')
-        if tocomp is None:
-            continue
-        mismatch = compare(etalon, tocomp)
-        if mismatch:
-            errors[filename] = 'mismatch, excel sheet written'
-            write_mismatch(filename, etalon, tocomp, mismatch)
-        else:
-            passed.append(filename)
-    show_summary()
+    setup_spreadsheets_dir()
+    passed = [ fname for fname in files_to_check() if check(fname) ]
+    show_summary(passed)
 
-def setup_errors_dir():
-    if isdir(ERRORS_DIR):
-        rmtree(ERRORS_DIR)
-    makedirs(ERRORS_DIR)
+def setup_spreadsheets_dir():
+    if isdir(SPREADSHEETS_DIR):
+        rmtree(SPREADSHEETS_DIR)
+    makedirs(SPREADSHEETS_DIR)
 
 def files_to_check():
     etalons = { f for f in listdir(ETALON_DIR) if f.endswith(EXTENSION) }
@@ -47,22 +58,50 @@ def files_to_check():
     etalon_only = etalons - tocomps
     tocomp_only = tocomps - etalons
     for e in etalon_only:
-        errors[e] = 'only etalon found'
+        log_error(e, 'only etalon found but the test file is missing')
     for t in tocomp_only:
-        errors[t] = 'missing etalon'
+        log_error(t, 'the etalon is missing for this test file')
     return sorted(etalons & tocomps)
 
+def check(filename):
+    etalon = get_content(ETALON_DIR, filename, 'etalon')
+    if etalon is None:
+        return
+    tocomp = get_content(TOCOMP_DIR, filename, 'test')
+    if tocomp is None:
+        return
+    mismatch = compare_headers(etalon, tocomp)
+    if mismatch:
+        log_error(filename, 'mismatch in headers, excel sheet written')
+        write_mismatch(filename, etalon, tocomp, mismatch)
+        return
+    etalon_len, tocomp_len = number_of_rows(etalon, tocomp)
+    if etalon_len!=tocomp_len:
+        msg = 'number of rows: {}!={}'.format(etalon_len, tocomp_len)
+        log_error(filename, msg)
+        return
+    mismatch = compare_values(etalon, tocomp)
+    if mismatch:
+        log_error(filename, 'mismatch, excel sheet written')
+        write_mismatch(filename, etalon, tocomp, mismatch)
+        return
+    return True
+
+def log_error(filename, msg):
+    assert filename not in errors, filename
+    errors[filename] = msg
+
 def get_content(directory, filename, kind):
-    header, lines = read_csv(join(directory,filename))
+    header, lines = read_csv( join(directory,filename) )
     col_types, error_msg = get_col_types(header)
     if error_msg:
-        errors[filename] = '{}, header: {}'.format(kind, error_msg)
+        log_error(filename, '{}, header: {}'.format(kind, error_msg))
         return
     # FIXME check row length == header length!
-    type_errors, table = convert(col_types, lines)
+    table, type_errors = convert(col_types, lines)
     if type_errors:
-        msg = '{}, type conversion error, excel sheet written'.format(kind)
-        errors[filename] = msg
+        msg = '{}, type conversion errors, excel sheet written'.format(kind)
+        log_error(filename, msg)
         xlsxname = get_filebase(filename) + '_'+kind+'_type_error.xlsx'
         write_cell_errors(xlsxname, header, lines, type_errors)
         return
@@ -78,16 +117,17 @@ def read_csv(filename):
     return header, lines
 
 def extract_first_line(f):
-    header = next(f,None)
+    header = next(f, None)
     return split(header) if header else [ ]
 
 def split(line):
     return line.rstrip('\r\n').split(SEP)
 
 def get_col_types(header):
+    # Returns ([type converters], error message). Exactly one of them is None.
     if len(header)==0:
         return None, 'missing'
-    col_types = [ TO_TYPE.get(col[-1], None) for col in header ]
+    col_types = [ TO_TYPE.get(col[-1:], None) for col in header ]
     for i, typ in enumerate(col_types):
         if typ is None:
             msg = 'unrecognized type in column {}: "{}"'.format(i+1, header[i])
@@ -96,8 +136,10 @@ def get_col_types(header):
     return col_types, None
 
 def convert(col_types, lines):
-    type_errors, table = [ ], [ ]
-    for i, line in enumerate(lines):
+    # Returns the tuple of: lines converted to a 2D table with proper types, and
+    # the cell indices where type conversion error occured.
+    table, type_errors = [ ], [ ]
+    for i, line in enumerate(lines,1):
         row = [ ]
         for j, col in enumerate(line):
             try:
@@ -107,32 +149,77 @@ def convert(col_types, lines):
                 type_errors.append((i,j))
         assert len(row)==len(col_types)
         table.append(row)
-    if type_errors:
-        table = None
-    return type_errors, table
+    return table if len(type_errors)==0 else [ ], type_errors 
 
 def get_filebase(path):
     return splitext(basename(path))[0]
 
 def write_cell_errors(xlsxname, header, lines, cells_to_mark):
-    workbook  = Workbook(join(ERRORS_DIR, xlsxname))
+    workbook  = Workbook(join(SPREADSHEETS_DIR, xlsxname))
     cell_fmt  = workbook.add_format()
-    worksheet = workbook.add_worksheet()
     cell_fmt.set_bg_color('cyan')
-    formatter = { cell : cell_fmt for cell in cells_to_mark }
-    worksheet.write_row(0, 0, header)
-    for i, line in enumerate(lines):
-        for j, item in enumerate(line):
-            worksheet.write(i+1, j, item, formatter.get((i,j), None))
+    worksheet = workbook.add_worksheet()
+    write_sheet(worksheet, cell_fmt, header, lines, cells_to_mark)
     workbook.close()
 
-def compare(etalon, tocomp):
-    pass
-
 def write_mismatch(filename, etalon, tocomp, mismatch):
-    pass
+    workbook  = Workbook(join(SPREADSHEETS_DIR, get_filebase(filename)+'.xlsx'))
+    cell_fmt  = workbook.add_format()
+    cell_fmt.set_bg_color('cyan')
+    worksheet = workbook.add_worksheet(name='test')
+    write_sheet(worksheet, cell_fmt, *tocomp, cells_to_mark=mismatch)
+    worksheet = workbook.add_worksheet(name='etalon')
+    write_sheet(worksheet, cell_fmt, *etalon)
+    workbook.close()
 
-def show_summary():
+def write_sheet(worksheet, cell_fmt, header, lines, cells_to_mark=[]):
+    formatter = { cell : cell_fmt for cell in cells_to_mark }
+    for j, col_header in enumerate(header):
+        worksheet.write(0, j, col_header, formatter.get((0,j), None))
+    for i, line in enumerate(lines, 1):
+        for j, item in enumerate(line):
+            worksheet.write(i,j, replace_nan(item), formatter.get((i,j),None))
+
+def replace_nan(item):
+    return 'NaN' if isinstance(item, float) and isnan(item) else item
+
+def compare_headers(etalon, tocomp):
+    mismatch = [ ]
+    e_head, _ = etalon
+    t_head, _ = tocomp
+    for i, (eh, th) in enumerate(izip_longest(e_head, t_head, fillvalue='')):
+        if eh!=th:
+            mismatch.append((0,i))
+    return mismatch
+
+def number_of_rows(etalon, tocomp):
+    return len(etalon[1]), len(tocomp[1])
+
+def compare_values(etalon, tocomp):
+    mismatch = [ ]
+    _, e_table = etalon
+    _, t_table = tocomp
+    for i, (e_row, t_row) in enumerate(izip(e_table, t_table), 1):
+        for j, (e_item, t_item) in enumerate(izip(e_row, t_row)):
+            if not equals(e_item, t_item):
+                mismatch.append((i,j))
+    return mismatch
+
+def equals(e, t):
+    return compare_floats(e, t) if isinstance(e, float) else e==t 
+
+def compare_floats(e, t):
+    e_nan, t_nan = isnan(e), isnan(t)
+    if e_nan and t_nan:
+        return True
+    elif e_nan or t_nan:
+        return False
+    else:
+        assert not e_nan and not t_nan
+        diff = abs(e-t)
+        return diff < ABS_TOL or diff < REL_TOL*abs(e)
+
+def show_summary(passed):
     print('-------------------------------------------------------------------')
     if passed:
         print('Passed: {} tests'.format(len(passed)))
@@ -140,10 +227,13 @@ def show_summary():
         msgs = sorted( errors.iteritems() )
         print('There were errors:')
         for fname, msg in msgs:
-            print('  {}: {}'.format(fname,msg))
+            print('  {} {}'.format(fname,msg))
+        # FIXME write_errors into a log file to the results directory as well!
+        #       Write the etalon and test dirs on the top of that log file
         print('Tests FAILED!')
     else:
         print('Tests PASSED!')
+    # FIXME Check if etalon and test are the same, warn if yes!
 
 if __name__ == '__main__':
     main()
