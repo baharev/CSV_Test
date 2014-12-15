@@ -4,40 +4,16 @@ import codecs
 from itertools import izip, izip_longest
 from math import isnan
 from os import listdir, makedirs
-from os.path import basename, isdir, join, splitext
+from os.path import basename, dirname, isdir, join, splitext
 from shutil import rmtree
+import sys
 from xlsxwriter import Workbook
 
-# The directory with the expected output (etalon CSV files).
-ETALON_DIR = '/home/ali/sg2ps_tests/etalon'
-
-# The directory with the CSV files that should be compared to the etalon CSVs.
-#TOCOMP_DIR = '/home/ali/sg2ps_tests/etalon'
-TOCOMP_DIR = '/home/ali/sg2ps_tests/to_compare'
-
-# Extension of the input CSV files (both the etalon and the test files). All 
-# other file types will be ignored in the comparison.
-EXTENSION  = '.csv'
-
-# Separator in the input CSV files.
-SEP  = ','
-
-# The spreadsheets show where the errors were detected.
-# Careful: The contents of this directory will be deleted on startup!
-SPREADSHEETS_DIR = '/tmp/sg2ps_tests/result'
-
-# The last character of the column name encodes the type. Here we map that 
-# charater to a type.
-TO_TYPE = { 's' : str,
-            'i' : int,
-            'd' : float } # NaN should be represented by the string NaN
-
-# Thresholds in floating point comparison
-REL_TOL = 1.0e-5
-ABS_TOL = 1.0e-5
+# A hackish way to import the configuration
+sys.path.append(dirname(__file__))
+from configuration import *
 
 #-------------------------------------------------------------------------------
-# Normally, there should be no need to modify anything below.
 
 ENCODING = 'ascii'
 errors = { }
@@ -52,6 +28,8 @@ def setup_spreadsheets_dir():
         rmtree(SPREADSHEETS_DIR)
     makedirs(SPREADSHEETS_DIR)
 
+# FIXME Add ignore.txt with files to ignore; finally, add warning if tests
+#       were skipped
 def files_to_check():
     etalons = { f for f in listdir(ETALON_DIR) if f.endswith(EXTENSION) }
     tocomps = { f for f in listdir(TOCOMP_DIR) if f.endswith(EXTENSION) }
