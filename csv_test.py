@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import codecs
+from contextlib import closing
+from cStringIO import StringIO
 from itertools import izip, izip_longest
 from math import isnan
 from os import listdir, makedirs
@@ -199,19 +201,33 @@ def compare_floats(e, t):
 
 def show_summary(passed):
     print('-------------------------------------------------------------------')
+    print('Etalon directory:', ETALON_DIR)
+    print('Compared against:', TOCOMP_DIR)
     if passed:
-        print('Passed: {} tests'.format(len(passed)))
+        print('Passed: {} files'.format(len(passed)))
     if errors:
-        msgs = sorted( errors.iteritems() )
-        print('There were errors:')
-        for fname, msg in msgs:
-            print('  {} {}'.format(fname,msg))
-        # FIXME write_errors into a log file to the results directory as well!
-        #       Write the etalon and test dirs on the top of that log file
-        print('Tests FAILED!')
+        log = create_error_log()
+        print(log)
+        write_errors(log)
+        print('Tests FAILED! Check "{}"'.format(SPREADSHEETS_DIR))
     else:
         print('Tests PASSED!')
-    # FIXME Check if etalon and test are the same, warn if yes!
+    if ETALON_DIR==TOCOMP_DIR:
+        print('WARNING: The etalon directory has been compared to itself!')
+
+def create_error_log():
+    with closing(StringIO()) as out:
+        out.write('There were errors:\n')
+        for fname, msg in sorted( errors.iteritems() ):
+            out.write('  {} {}\n'.format(fname,msg))
+        return out.getvalue()      
+
+def write_errors(log):
+    logfile_name = join(SPREADSHEETS_DIR, 'log.txt') 
+    with open(logfile_name, 'w') as f:
+        f.write('Etalon directory: {}\n'.format(ETALON_DIR))
+        f.write('Compared against: {}\n'.format(TOCOMP_DIR))
+        f.write(log)
 
 if __name__ == '__main__':
     main()
