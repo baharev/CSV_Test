@@ -13,8 +13,9 @@ EXTENSION  = '.csv'
 SEP  = ','
 
 # The spreadsheets show where the errors were detected.
-# Careful: The contents of this directory will be deleted on startup!
+# Careful: all .xlsx files and the log file will be deleted on startup!
 SPREADSHEETS_DIR = '/tmp/sg2ps_tests/result'
+LOGFILE = 'log.txt'
 
 # The last character of the column name encodes the type. Here we map that 
 # charater to a type.

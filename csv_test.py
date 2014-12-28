@@ -5,9 +5,8 @@ from contextlib import closing
 from cStringIO import StringIO
 from itertools import izip, izip_longest
 from math import isnan
-from os import listdir, makedirs
-from os.path import basename, dirname, isdir, join, splitext
-from shutil import rmtree
+from os import listdir, makedirs, remove
+from os.path import basename, dirname, isdir, isfile, join, splitext
 import sys
 from xlsxwriter import Workbook
 
@@ -26,9 +25,17 @@ def main():
     show_summary(passed)
 
 def setup_spreadsheets_dir():
-    if isdir(SPREADSHEETS_DIR):
-        rmtree(SPREADSHEETS_DIR)
-    makedirs(SPREADSHEETS_DIR)
+    if not isdir(SPREADSHEETS_DIR):
+        makedirs(SPREADSHEETS_DIR)
+        return
+    # clean up .xlsx files from the previous run and the log file, if any
+    to_del = sorted(f for f in listdir(SPREADSHEETS_DIR) if f.endswith('.xlsx'))
+    if isfile(join(SPREADSHEETS_DIR, LOGFILE)):
+        to_del.append(LOGFILE)
+    for f in to_del:
+        remove(join(SPREADSHEETS_DIR,f))
+    if to_del:
+        print('Deleted',len(to_del),'files in', SPREADSHEETS_DIR)
 
 # FIXME Add ignore.txt with files to ignore; finally, add warning if tests
 #       were skipped
@@ -44,10 +51,10 @@ def files_to_check():
     return sorted(etalons & tocomps)
 
 def check(filename):
-    etalon = get_content(ETALON_DIR, filename, 'etalon')
+    etalon = get_content(ETALON_DIR, filename, kind='etalon')
     if etalon is None:
         return
-    tocomp = get_content(TOCOMP_DIR, filename, 'test')
+    tocomp = get_content(TOCOMP_DIR, filename, kind='test')
     if tocomp is None:
         return
     mismatch = compare_headers(etalon, tocomp)
@@ -77,7 +84,10 @@ def get_content(directory, filename, kind):
     if error_msg:
         log_error(filename, '{}, header: {}'.format(kind, error_msg))
         return
-    # FIXME check row length == header length!
+    error_msg = check_rowlength(lines, expected_len=len(col_types))
+    if error_msg:
+        log_error(filename, '{}, {}'.format(kind, error_msg))
+        return
     table, type_errors = convert(col_types, lines)
     if type_errors:
         msg = '{}, type conversion errors, excel sheet written'.format(kind)
@@ -105,6 +115,7 @@ def split(line):
 
 def get_col_types(header):
     # Returns ([type converters], error message). Exactly one of them is None.
+    # Only the first error is logged.
     if len(header)==0:
         return None, 'missing'
     col_types = [ TO_TYPE.get(col[-1:], None) for col in header ]
@@ -114,6 +125,14 @@ def get_col_types(header):
             return None, msg
     assert len(col_types)==len(header)
     return col_types, None
+
+def check_rowlength(lines, expected_len):
+    # Returns error message on error, None otherwise.
+    # The first row is the header, and error messages use base 1 indices
+    indices = [i for i, row in enumerate(lines, 2) if len(row)!=expected_len]
+    if indices:
+        return 'row length error in rows (header is row 1): {}'.format(indices)
+    return None
 
 def convert(col_types, lines):
     # Returns the tuple of: lines converted to a 2D table with proper types, and
