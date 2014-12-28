@@ -21,8 +21,8 @@ def main():
         return
     
     # FIXME Continue from here
-    # Delete the to comp dir and copy .rgf, .set and .xy files into the test dir?
-    # Or simply write the test dir over with the etalon dir?
+    # Delete the to comp dir and copy .rgf, .set and .xy files into the test 
+    # dir? Or simply write the test dir over with the etalon dir?
     #
     # clean up csv files from the previous run, if any
     to_del = sorted(f for f in listdir(TOCOMP_DIR) if f.endswith(EXTENSION))
