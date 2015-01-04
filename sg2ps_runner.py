@@ -15,13 +15,14 @@ SG2PS_EXE = '/home/ali/ws-pydev/CSV_Test/sg2ps'
 FLAG =  '--debug'
 INPUT_EXT = '.rgf'
 RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_folder'
+#RGF_FOLDER = '/home/ali/sg2ps_tests/empty'
 
-# TODO Invoke csv_test on TO_COMP and ETALON 
 #===============================================================================
 
 # A hackish way to import the configuration
 sys.path.append(dirname(__file__))
 from configuration import ETALON_DIR, TOCOMP_DIR, EXTENSION
+from csv_test import main as csvtest_main
 
 def main():
     if is_there_path_error():
@@ -39,6 +40,9 @@ def main():
     print('Copied', len(to_cp), 'files')
     # Run the sg2ps executable on the projects in TOCOMP_DIR  
     projects = [f[:-len(INPUT_EXT)] for f in to_cp if f.endswith(INPUT_EXT)]
+    if not projects:
+        print('Something is wrong, no projects found...')
+        return
     for f in projects:
         print('Processing:', f)
         ret = subprocess.call([SG2PS_EXE, FLAG, f], cwd=TOCOMP_DIR)
@@ -47,9 +51,22 @@ def main():
             return
     print('Test file generation finished')
     # Keep only the result files
-    to_del = sorted(f for f in listdir(TOCOMP_DIR) if not f.endswith(EXTENSION))
-    for f in to_del:
-        remove(join(TOCOMP_DIR, f))
+    allcontent = [ join(TOCOMP_DIR, f) for f in listdir(TOCOMP_DIR) ]
+    keep = { f for f in allcontent if isfile(f) and f.endswith(EXTENSION) }
+    for f in allcontent:
+        if f in keep:
+            continue
+        elif isfile(f):
+            remove(f)
+        else:
+            shutil.rmtree(f)
+    # Each project should generate exactly one CSV file
+    if len(keep) != len(projects):
+        print('Something is strange:',len(projects),'projects but ',end='')
+        print(len(keep),'CSV files, exiting...')
+        return
+    print('Invoking CSV test now')
+    csvtest_main()
 
 def is_there_path_error():
     # Consider replacing this long if - elif with a loop
