@@ -13,7 +13,7 @@ import shutil
 
 # A hackish way to import the configuration
 sys.path.append(dirname(__file__))
-from configuration import ETALON_DIR, TOCOMP_DIR, SG2PS_HOME, EXTENSION
+from configuration import ETALON_DIR, TOCOMP_DIR, _SG2PS_HOME, EXTENSION
 from csv_test import main as csvtest_main
 
 #===============================================================================
@@ -21,11 +21,11 @@ from csv_test import main as csvtest_main
 WIN = platform.system()=='Windows'
 
 # Assumes the default directory layout of Eclipse and project name SG2PS
-SG2PS_EXE = join(SG2PS_HOME, 'Debug', 'SG2PS.exe' if WIN else 'SG2PS')
+SG2PS_EXE = join(_SG2PS_HOME, 'Debug', 'SG2PS.exe' if WIN else 'SG2PS')
 #SG2PS_EXE = '/home/ali/ws-pydev/CSV_Test/sg2ps'
 FLAG =  '--debug'
 INPUT_EXT = '.rgf'
-RGF_FOLDER = join(SG2PS_HOME, 'etalon_rgf')
+RGF_FOLDER = join(_SG2PS_HOME, 'etalon_rgf')
 # Check configuration.py too!
 
 #===============================================================================
