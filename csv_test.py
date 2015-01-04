@@ -37,8 +37,6 @@ def setup_spreadsheets_dir():
     if to_del:
         print('Deleted',len(to_del),'files in', SPREADSHEETS_DIR)
 
-# FIXME Add ignore.txt with files to ignore; finally, add warning if tests
-#       were skipped
 def files_to_check():
     etalons = { f for f in listdir(ETALON_DIR) if f.endswith(EXTENSION) }
     tocomps = { f for f in listdir(TOCOMP_DIR) if f.endswith(EXTENSION) }
