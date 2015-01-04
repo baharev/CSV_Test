@@ -1,6 +1,7 @@
 # Copyright (C) 2014, 2015 by Ali Baharev <ali.baharev@gmail.com>
 # All rights reserved.
 # BSD license.
+# https://github.com/baharev/CSV_Test
 
 # The directory with the expected output (etalon CSV files).
 ETALON_DIR = '/home/ali/sg2ps_tests/etalon'
