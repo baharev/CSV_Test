@@ -119,7 +119,7 @@ def is_there_path_error():
 
 def samefile_or_dir(f1, f2):
     try:
-	    from os.path import samefile
+        from os.path import samefile
     except ImportError:
         return normcase(normpath(f1)) == normcase(normpath(f2))
     return samefile(f1, f2)
