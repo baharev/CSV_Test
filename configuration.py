@@ -3,7 +3,8 @@ ETALON_DIR = '/home/ali/sg2ps_tests/etalon'
 
 # The directory with the CSV files that should be compared to the etalon CSVs.
 #TOCOMP_DIR = '/home/ali/sg2ps_tests/etalon'
-TOCOMP_DIR = '/home/ali/sg2ps_tests/to_compare'
+#TOCOMP_DIR = '/home/ali/sg2ps_tests/to_compare'
+TOCOMP_DIR = '/tmp/sg2ps_tests/to_compare'
 
 # Extension of the input CSV files (both the etalon and the test files). All 
 # other file types will be ignored in the comparison.
