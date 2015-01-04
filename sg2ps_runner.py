@@ -13,6 +13,10 @@ import shutil
 #      Set default separator to tab
 #      Remove all exit from sg2ps executable, throw test_finished exception?
 #      Create etalon and etalon_rgf folders in the sg2ps source tree
+#      Install canopy, xlsxwriter
+#      
+#      Windows change in samefile!
+#      Print temp directory
 
 #===============================================================================
 
