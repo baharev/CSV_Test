@@ -9,6 +9,11 @@ from os import access, listdir, makedirs, remove, X_OK
 from os.path import dirname, isdir, isfile, join, normcase, normpath, samefile
 import shutil
 
+# TODO Add github URL to each file
+#      Set default separator to tab
+#      Remove all exit from sg2ps executable, throw test_finished exception?
+#      Create etalon and etalon_rgf folders in the sg2ps source tree
+
 #===============================================================================
 
 SG2PS_EXE = '/home/ali/ws-pydev/CSV_Test/sg2ps'
