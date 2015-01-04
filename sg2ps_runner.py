@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import sys
-from os import listdir, makedirs, remove
+from os import listdir, makedirs
 from os.path import dirname, isdir, isfile, join, normcase, normpath, samefile
 import shutil
 
@@ -20,7 +20,7 @@ RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_folder'
 
 # A hackish way to import the configuration
 sys.path.append(dirname(__file__))
-from configuration import ETALON_DIR, TOCOMP_DIR, EXTENSION
+from configuration import ETALON_DIR, TOCOMP_DIR #, EXTENSION
 
 def main():
     if is_there_path_error():
@@ -37,7 +37,7 @@ def main():
         shutil.copy(join(RGF_FOLDER, f), TOCOMP_DIR)
     print('Copied', len(to_cp), 'files')
     return    
-    # FIXME Continue from here
+    # FIXME Continue from here: run sg2ps on the TO_COMP folder
 
 def is_there_path_error():
     if not isdir(ETALON_DIR):
