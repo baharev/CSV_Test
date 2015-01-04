@@ -17,6 +17,13 @@ from xlsxwriter import Workbook
 sys.path.append(dirname(__file__))
 from configuration import *
 
+# TODO Add github URL to each file
+#      Print temp directory
+#      Set default separator to tab
+#      Remove all exit from sg2ps executable, throw test_finished exception?
+#      Create etalon and etalon_rgf folders in the sg2ps source tree
+#      Install canopy, xlsxwriter
+
 #-------------------------------------------------------------------------------
 
 ENCODING = 'ascii'
