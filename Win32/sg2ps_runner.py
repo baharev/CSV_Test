@@ -20,12 +20,11 @@ from csv_test import main as csvtest_main
 WIN = platform.system()=='Windows'
 
 # Assumes the default directory layout of Eclipse and project name SG2PS
-#SG2PS_EXE = join(SG2PS_HOME, 'Debug', 'SG2PS.exe' if WIN else 'SG2PS')
-SG2PS_EXE = '/home/ali/ws-pydev/CSV_Test/sg2ps'
+SG2PS_EXE = join(SG2PS_HOME, 'Debug', 'SG2PS.exe' if WIN else 'SG2PS')
+#SG2PS_EXE = '/home/ali/ws-pydev/CSV_Test/sg2ps'
 FLAG =  '--debug'
 INPUT_EXT = '.rgf'
-RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_folder'
-#RGF_FOLDER = '/home/ali/sg2ps_tests/empty'
+RGF_FOLDER = join(SG2PS_HOME, 'etalon_rgf')
 # Check configuration.py too!
 
 #===============================================================================
