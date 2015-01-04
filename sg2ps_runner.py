@@ -24,25 +24,39 @@ sys.path.append(dirname(__file__))
 from configuration import ETALON_DIR, TOCOMP_DIR, EXTENSION
 from csv_test import main as csvtest_main
 
+
 def main():
+    
+    # Check whether we need to invoke CSV test after generating the input
+    NO_TEST = '--notest'
+    argc = len(sys.argv)
+    if argc > 2 or (argc==2 and sys.argv[1] != NO_TEST):
+        print('Only the optional', NO_TEST, 'argument is supported')
+        return
+    RUN_CSVTEST = argc < 2
+    
     if is_there_path_error():
         print('Exiting...')
         return
     print('All paths seem sane')
+    
     # Delete the TOCOMP_DIR as it may contain files from a previous run
     if isdir(TOCOMP_DIR):
         shutil.rmtree(TOCOMP_DIR)        
     makedirs(TOCOMP_DIR)
+    
     # Copy the input files from the RGF folder to the test directory TOCOMP_DIR
     to_cp = sorted(f for f in listdir(RGF_FOLDER) if isfile(join(RGF_FOLDER,f)))
     for f in to_cp:
         shutil.copy(join(RGF_FOLDER, f), TOCOMP_DIR)
     print('Copied', len(to_cp), 'files')
+    
     # Run the sg2ps executable on the projects in TOCOMP_DIR  
     projects = [f[:-len(INPUT_EXT)] for f in to_cp if f.endswith(INPUT_EXT)]
     if not projects:
         print('Something is wrong, no projects found...')
         return
+    #
     for f in projects:
         print('Processing:', f)
         ret = subprocess.call([SG2PS_EXE, FLAG, f], cwd=TOCOMP_DIR)
@@ -50,6 +64,7 @@ def main():
             print('Fatal error when calling {}, exiting...'.format(SG2PS_EXE))
             return
     print('Test file generation finished')
+    
     # Keep only the result files
     allcontent = [ join(TOCOMP_DIR, f) for f in listdir(TOCOMP_DIR) ]
     keep = { f for f in allcontent if isfile(f) and f.endswith(EXTENSION) }
@@ -60,13 +75,19 @@ def main():
             remove(f)
         else:
             shutil.rmtree(f)
+    
     # Each project should generate exactly one CSV file
     if len(keep) != len(projects):
         print('Something is strange:',len(projects),'projects but ',end='')
         print(len(keep),'CSV files, exiting...')
         return
-    print('Invoking CSV test now')
-    csvtest_main()
+
+    if RUN_CSVTEST:
+        print('Invoking CSV test now\n')
+        csvtest_main()
+    else:
+        print('Not running tests as requested; we are done!')
+
 
 def is_there_path_error():
     # Consider replacing this long if - elif with a loop
@@ -90,11 +111,13 @@ def is_there_path_error():
         return False
     return True
 
+
 def samefile_or_dir(f1, f2):
     try:
         return samefile(f1, f2)
     except AttributeError:
         return normcase(normpath(f1)) == normcase(normpath(f2))
+
 
 if __name__=='__main__':
     main()
