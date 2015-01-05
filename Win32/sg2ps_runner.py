@@ -8,28 +8,13 @@ import subprocess
 import sys
 from os import access, listdir, makedirs, remove, X_OK
 from os.path import dirname, isdir, isfile, join, normcase, normpath
-import platform
 import shutil
 
 # A hackish way to import the configuration
 sys.path.append(dirname(__file__))
-from configuration import ETALON_DIR, TOCOMP_DIR, _SG2PS_HOME, EXTENSION
+from configuration import RGF_FOLDER, INPUT_EXT, ETALON_DIR, TOCOMP_DIR, \
+                          EXTENSION, SG2PS_EXE, FLAG
 from csv_test import main as csvtest_main
-
-#===============================================================================
-
-WIN = platform.system()=='Windows'
-
-# Assumes the default directory layout of Eclipse and project name SG2PS
-SG2PS_EXE = join(_SG2PS_HOME, 'Debug', 'SG2PS.exe' if WIN else 'SG2PS')
-#SG2PS_EXE = '/home/ali/ws-pydev/CSV_Test/sg2ps'
-FLAG =  '--debug'
-INPUT_EXT = '.rgf'
-RGF_FOLDER = join(_SG2PS_HOME, 'etalon_rgf')
-# Check configuration.py too!
-
-#===============================================================================
-
 
 def main():
     
@@ -48,7 +33,8 @@ def main():
     
     # Delete the TOCOMP_DIR as it may contain files from a previous run
     if isdir(TOCOMP_DIR):
-        shutil.rmtree(TOCOMP_DIR)        
+        shutil.rmtree(TOCOMP_DIR)
+    print('Creating the test folder "{}"'.format(TOCOMP_DIR))
     makedirs(TOCOMP_DIR)
     
     # Copy the input files from the RGF folder to the test directory TOCOMP_DIR

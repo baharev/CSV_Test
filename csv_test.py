@@ -18,9 +18,20 @@ from xlsxwriter import Workbook
 sys.path.append(dirname(__file__))
 from configuration import *
 
-# TODO Remove all exit from sg2ps executable, throw test_finished exception?
+# TODO Project name SG2PS
+#      Dump CSV, with type info in the column
+#      NaN as NaN string
+#      Remove all exit() from sg2ps executable, throw test_finished exception?
+#      Test failures can be tested as well
+#
 #      Create etalon and etalon_rgf folders in the sg2ps source tree
-
+#      Whitelist: run only these unconditionally (should be called testset.txt?)
+#        if no whitelist or empty, run all rgf-s in the folder - blacklisted
+#        blacklist is only considered if the whitelist is not present or empty
+#        call blacklisted as ignore.txt? Or no extension?
+#        blacklist and whitelist should have a single file per line and 
+#        comment lines with #, empty lines are allowed
+#      Check whether input and csv extensions are different
 #-------------------------------------------------------------------------------
 
 ENCODING = 'ascii'

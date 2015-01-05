@@ -51,7 +51,7 @@ def main():
     # Delete the TOCOMP_DIR as it may contain files from a previous run
     if isdir(TOCOMP_DIR):
         shutil.rmtree(TOCOMP_DIR)
-    print('Creating the test folder "{}"'.format(TOCOMP_DIR))      
+    print('Creating the test folder "{}"'.format(TOCOMP_DIR))
     makedirs(TOCOMP_DIR)
     
     # Copy the input files from the RGF folder to the test directory TOCOMP_DIR

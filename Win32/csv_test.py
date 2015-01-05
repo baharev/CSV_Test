@@ -16,7 +16,8 @@ from xlsxwriter import Workbook
 
 # A hackish way to import the configuration
 sys.path.append(dirname(__file__))
-from configuration import *
+from configuration import ETALON_DIR, TOCOMP_DIR, EXTENSION, SPREADSHEETS_DIR, \
+                          LOGFILE, SEP, TO_TYPE, ABS_TOL, REL_TOL
 
 #-------------------------------------------------------------------------------
 
