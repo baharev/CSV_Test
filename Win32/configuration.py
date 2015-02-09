@@ -23,6 +23,7 @@ FLAG =  '--debug'
 
 INPUT_EXT = '.rgf'
 
+# The .rgf files in this folder will be used to generate the CSV files.
 RGF_FOLDER = join(SG2PS_HOME, 'etalon_rgf')
 
 # The directory with the expected output (etalon CSV files).
@@ -36,7 +37,7 @@ EXTENSION  = '.csv'
 SEP  = '\t'
 
 # Root directory of the other temporary directories
-TMP_ROOT = 'C:\\tmp' if IS_WIN else '/tmp' 
+TMP_ROOT = 'D:\\tmp' if IS_WIN else '/tmp' 
 
 # The directory with the CSV files that should be compared to the etalon CSVs.
 # WARNING: This directory will be *deleted* every time sg2ps_runner.py is run!
