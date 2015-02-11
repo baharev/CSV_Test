@@ -64,15 +64,15 @@ def main():
         shutil.copy(join(RGF_FOLDER, f), TOCOMP_DIR)
     print('Copied', len(to_cp), 'files')
     
-    # Run the sg2ps executable on the projects in TOCOMP_DIR  
+    # Collect the project names
     projects = [f[:-len(INPUT_EXT)] for f in to_cp if f.endswith(INPUT_EXT)]
     if not projects:
         print('Something is wrong, no projects found...')
         return
-    #
+    # Run the sg2ps executable on the projects in TOCOMP_DIR 
     for f in projects:
-        print('Processing:', f)
         cmd = [SG2PS_EXE, FLAG, f]
+        print('Executing command: {} {} {}'.format(*cmd))
         with open(join(TOCOMP_DIR, f+LOG_EXT), 'w') as logfile:
             ret = subprocess.call(cmd, cwd=TOCOMP_DIR, stdout=logfile)
             if ret:

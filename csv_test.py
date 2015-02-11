@@ -33,6 +33,7 @@ from configuration import *
 #        comment lines with #, empty lines are allowed
 #      Check whether input and csv extensions are different
 #      Simply delete the spreadsheet folder
+#      Cleanup the imports (codecs for example)
 #-------------------------------------------------------------------------------
 
 ENCODING = 'ascii'
@@ -236,7 +237,8 @@ def compare_floats(e, t):
         return diff < ABS_TOL or diff < REL_TOL*abs(e)
 
 def show_summary(passed):
-    print('-------------------------------------------------------------------')
+    print()
+    print('===================================================================')
     print('Etalon directory:', ETALON_DIR)
     print('Compared against:', TOCOMP_DIR)
     if passed:
