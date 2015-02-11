@@ -4,7 +4,8 @@
 # https://github.com/baharev/CSV_Test
 
 # The directory with the expected output (etalon CSV files).
-ETALON_DIR = '/home/ali/sg2ps_tests/etalon'
+#ETALON_DIR = '/home/ali/sg2ps_tests/etalon'
+ETALON_DIR = '/home/ali/sg2ps_tests/etalon_passing'
 #ETALON_DIR = '/home/ali/sg2ps_tests/empty'
 
 # The directory with the CSV files that should be compared to the etalon CSVs.

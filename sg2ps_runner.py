@@ -26,7 +26,8 @@ WIN = platform.system()=='Windows'
 SG2PS_EXE = '/home/ali/ws-pydev/CSV_Test/sg2ps'
 FLAG =  '--debug'
 INPUT_EXT = '.rgf'
-RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_folder'
+#RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_folder'
+RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_passing'
 #RGF_FOLDER = '/home/ali/sg2ps_tests/empty'
 # Check configuration.py too!
 

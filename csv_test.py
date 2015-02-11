@@ -32,6 +32,7 @@ from configuration import *
 #        blacklist and whitelist should have a single file per line and 
 #        comment lines with #, empty lines are allowed
 #      Check whether input and csv extensions are different
+#      Simply delete the spreadsheet folder
 #-------------------------------------------------------------------------------
 
 ENCODING = 'ascii'
