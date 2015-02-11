@@ -32,8 +32,6 @@ from configuration import *
 #        blacklist and whitelist should have a single file per line and 
 #        comment lines with #, empty lines are allowed
 #      Check whether input and csv extensions are different
-#      Save the console output of sg2ps, and delete them on a new run
-#      Handle the case when no comparison was done
 #-------------------------------------------------------------------------------
 
 ENCODING = 'ascii'
@@ -249,7 +247,8 @@ def show_summary(passed):
         print('Tests FAILED! Check "{}"'.format(SPREADSHEETS_DIR))
     elif passed:
         print('Tests PASSED!')
-    # FIXME What if passed is empty because nothing was compared?
+    else:
+        print('Something is strange: Are the directories empty?')
     if ETALON_DIR==TOCOMP_DIR:
         print('WARNING: The etalon directory has been compared to itself!')
 

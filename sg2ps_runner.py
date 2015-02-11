@@ -30,6 +30,9 @@ RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_folder'
 #RGF_FOLDER = '/home/ali/sg2ps_tests/empty'
 # Check configuration.py too!
 
+# Save the console output of sg2ps into a <project name>.log file
+LOG_EXT = '.log'
+
 #===============================================================================
 
 
@@ -68,15 +71,20 @@ def main():
     #
     for f in projects:
         print('Processing:', f)
-        ret = subprocess.call([SG2PS_EXE, FLAG, f], cwd=TOCOMP_DIR)
-        if ret:
-            print('Fatal error when calling {}, exiting...'.format(SG2PS_EXE))
-            return
+        cmd = [SG2PS_EXE, FLAG, f]
+        with open(join(TOCOMP_DIR, f+LOG_EXT), 'w') as logfile:
+            ret = subprocess.call(cmd, cwd=TOCOMP_DIR, stdout=logfile)
+            if ret:
+                print('Fatal error when calling {}, exiting'.format(SG2PS_EXE))
+                return
     print('Test file generation finished')
     
-    # Keep only the result files
+    # Keep only the result and the log files
     allcontent = [ join(TOCOMP_DIR, f) for f in listdir(TOCOMP_DIR) ]
-    keep = { f for f in allcontent if isfile(f) and f.endswith(EXTENSION) }
+    files = [ f for f in allcontent if isfile(f) ]
+    keep_csv = [ f for f in files if f.endswith(EXTENSION) ]
+    keep = { f for f in files if f.endswith(LOG_EXT) } # keep the logs too
+    keep.update(keep_csv)
     for f in allcontent:
         if f in keep:
             continue
@@ -86,9 +94,9 @@ def main():
             shutil.rmtree(f)
     
     # Each project should generate exactly one CSV file
-    if len(keep) != len(projects):
+    if len(keep_csv) != len(projects):
         print('Something is strange:',len(projects),'projects but ',end='')
-        print(len(keep),'CSV files, exiting...')
+        print(len(keep_csv),'CSV files, exiting...')
         return
 
     if RUN_CSVTEST:
