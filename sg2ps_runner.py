@@ -4,12 +4,12 @@
 # BSD license.
 # https://github.com/baharev/CSV_Test
 from __future__ import print_function
-import subprocess
+from subprocess import call
 import sys
 from os import access, listdir, makedirs, remove, X_OK
 from os.path import dirname, isdir, isfile, join, normcase, normpath
 import platform
-import shutil
+from shutil import rmtree, copy
 
 # A hackish way to import the configuration
 sys.path.append(dirname(__file__))
@@ -26,8 +26,8 @@ WIN = platform.system()=='Windows'
 SG2PS_EXE = '/home/ali/ws-pydev/CSV_Test/sg2ps'
 FLAG =  '--debug'
 INPUT_EXT = '.rgf'
-#RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_folder'
-RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_passing'
+RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_folder'
+#RGF_FOLDER = '/home/ali/sg2ps_tests/rgf_passing'
 #RGF_FOLDER = '/home/ali/sg2ps_tests/empty'
 # Check configuration.py too!
 
@@ -54,15 +54,16 @@ def main():
     
     # Delete the TOCOMP_DIR as it may contain files from a previous run
     if isdir(TOCOMP_DIR):
-        shutil.rmtree(TOCOMP_DIR)
+        rmtree(TOCOMP_DIR)
     print('Creating the test folder "{}"'.format(TOCOMP_DIR))
     makedirs(TOCOMP_DIR)
     
     # Copy the input files from the RGF folder to the test directory TOCOMP_DIR
     to_cp = sorted(f for f in listdir(RGF_FOLDER) if isfile(join(RGF_FOLDER,f)))
     for f in to_cp:
-        shutil.copy(join(RGF_FOLDER, f), TOCOMP_DIR)
-    print('Copied', len(to_cp), 'files')
+        copy(join(RGF_FOLDER, f), TOCOMP_DIR)
+    print('Copied', len(to_cp), 'files ', end='')
+    print('from "{}" to "{}"'.format(RGF_FOLDER, TOCOMP_DIR))
     
     # Collect the project names
     projects = [f[:-len(INPUT_EXT)] for f in to_cp if f.endswith(INPUT_EXT)]
@@ -74,7 +75,7 @@ def main():
         cmd = [SG2PS_EXE, FLAG, f]
         print('Executing command: {} {} {}'.format(*cmd))
         with open(join(TOCOMP_DIR, f+LOG_EXT), 'w') as logfile:
-            ret = subprocess.call(cmd, cwd=TOCOMP_DIR, stdout=logfile)
+            ret = call(cmd, cwd=TOCOMP_DIR, stdout=logfile)
             if ret:
                 print('Fatal error when calling {}, exiting'.format(SG2PS_EXE))
                 return
@@ -92,7 +93,7 @@ def main():
         elif isfile(f):
             remove(f)
         else:
-            shutil.rmtree(f)
+            rmtree(f)
     
     # Each project should generate exactly one CSV file
     if len(keep_csv) != len(projects):
@@ -102,7 +103,7 @@ def main():
 
     if RUN_CSVTEST:
         print('Invoking CSV test now\n')
-        csvtest_main()
+        csvtest_main('RGF files are in: "{}"'.format(RGF_FOLDER))
     else:
         print('Not running tests as requested; we are done!')
 

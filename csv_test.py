@@ -4,18 +4,17 @@
 # BSD license.
 # https://github.com/baharev/CSV_Test
 from __future__ import print_function
-import codecs
 from contextlib import closing
 from cStringIO import StringIO
 from itertools import izip, izip_longest
 from math import isnan
 from os import listdir, makedirs, remove
 from os.path import basename, dirname, isdir, isfile, join, splitext
-import sys
+import sys as _sys
 from xlsxwriter import Workbook
 
 # A hackish way to import the configuration
-sys.path.append(dirname(__file__))
+_sys.path.append(dirname(__file__))
 from configuration import *
 
 # TODO Project name SG2PS
@@ -25,24 +24,21 @@ from configuration import *
 #      Test failures can be tested as well
 #
 #      Create etalon and etalon_rgf folders in the sg2ps source tree
+#
 #      Whitelist: run only these unconditionally (should be called testset.txt?)
 #        if no whitelist or empty, run all rgf-s in the folder - blacklisted
 #        blacklist is only considered if the whitelist is not present or empty
 #        call blacklisted as ignore.txt? Or no extension?
 #        blacklist and whitelist should have a single file per line and 
 #        comment lines with #, empty lines are allowed
-#      Check whether input and csv extensions are different
-#      Simply delete the spreadsheet folder
-#      Cleanup the imports (codecs for example)
 #-------------------------------------------------------------------------------
 
-ENCODING = 'ascii'
 errors = { }
 
-def main():
+def main(extra_msg = ''):
     setup_spreadsheets_dir()
     passed = [ fname for fname in files_to_check() if check(fname) ]
-    show_summary(passed)
+    show_summary(passed, extra_msg)
 
 def setup_spreadsheets_dir():
     if not isdir(SPREADSHEETS_DIR):
@@ -118,7 +114,7 @@ def get_content(directory, filename, kind):
 def read_csv(filename):
     print()
     print('Trying to read file "{}"'.format(filename))
-    with codecs.open(filename, 'r', ENCODING) as f:
+    with open(filename, 'r') as f:
         header = extract_first_line(f)
         lines = [ split(line) for line in f ]
     print('Read {} lines'.format( bool(header) + len(lines) ))
@@ -236,17 +232,17 @@ def compare_floats(e, t):
         diff = abs(e-t)
         return diff < ABS_TOL or diff < REL_TOL*abs(e)
 
-def show_summary(passed):
+def show_summary(passed, extra_msg):
+    header = create_header(extra_msg)
     print()
     print('===================================================================')
-    print('Etalon directory:', ETALON_DIR)
-    print('Compared against:', TOCOMP_DIR)
+    print(header)
     if passed:
         print('Passed: {} files'.format(len(passed)))
     if errors:
         log = create_error_log()
         print(log)
-        write_errors(log)
+        write_errors(header, log)
         print('Tests FAILED! Check "{}"'.format(SPREADSHEETS_DIR))
     elif passed:
         print('Tests PASSED!')
@@ -255,6 +251,13 @@ def show_summary(passed):
     if ETALON_DIR==TOCOMP_DIR:
         print('WARNING: The etalon directory has been compared to itself!')
 
+def create_header(extra_msg):
+    with closing(StringIO()) as out:
+        out.write( extra_msg + '\n' )
+        out.write('Etalon directory: "{}"\n'.format(ETALON_DIR))
+        out.write('Compared against: "{}"\n'.format(TOCOMP_DIR))
+        return out.getvalue()  
+
 def create_error_log():
     with closing(StringIO()) as out:
         out.write('There were errors:\n')
@@ -262,11 +265,10 @@ def create_error_log():
             out.write('  {} {}\n'.format(fname,msg))
         return out.getvalue()      
 
-def write_errors(log):
+def write_errors(header, log):
     logfile_name = join(SPREADSHEETS_DIR, 'log.txt') 
     with open(logfile_name, 'w') as f:
-        f.write('Etalon directory: {}\n'.format(ETALON_DIR))
-        f.write('Compared against: {}\n'.format(TOCOMP_DIR))
+        f.write(header)
         f.write(log)
 
 if __name__ == '__main__':
