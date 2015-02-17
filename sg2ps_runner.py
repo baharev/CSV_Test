@@ -8,7 +8,6 @@ from subprocess import call
 import sys
 from os import access, listdir, makedirs, remove, X_OK
 from os.path import dirname, isdir, isfile, join, normcase, normpath
-import platform
 from shutil import rmtree, copy
 
 # A hackish way to import the configuration
@@ -18,7 +17,7 @@ from csv_test import main as csvtest_main
 
 #===============================================================================
 
-WIN = platform.system()=='Windows'
+WIN = (sys.platform == "win32")
 
 # Assumes the default directory layout of Eclipse and project name SG2PS
 # SG2PS_HOME is defined in configuration
@@ -66,6 +65,7 @@ def main():
     print('from "{}" to "{}"'.format(RGF_FOLDER, TOCOMP_DIR))
     
     # Collect the project names
+    # FIXME Consider testset and ignore here!
     projects = [f[:-len(INPUT_EXT)] for f in to_cp if f.endswith(INPUT_EXT)]
     if not projects:
         print('Something is wrong, no projects found...')
@@ -76,6 +76,8 @@ def main():
         print('Executing command: {} {} {}'.format(*cmd))
         with open(join(TOCOMP_DIR, f+LOG_EXT), 'w') as logfile:
             ret = call(cmd, cwd=TOCOMP_DIR, stdout=logfile)
+            # FIXME Simply log and ignore all errors? Otherwise test failures
+            #       cannot be handled, which return non-zero return codes.
             if ret:
                 print('Fatal error when calling {}, exiting'.format(SG2PS_EXE))
                 return

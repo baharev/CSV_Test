@@ -54,8 +54,26 @@ def setup_spreadsheets_dir():
         print('Deleted',len(to_del),'files in', SPREADSHEETS_DIR)
 
 def files_to_check():
+    # FIXME Cleanup!
     etalons = { f for f in listdir(ETALON_DIR) if f.endswith(EXTENSION) }
     tocomps = { f for f in listdir(TOCOMP_DIR) if f.endswith(EXTENSION) }
+    testset = { f+EXTENSION for f in TESTSET }
+    #-----------------------------------------------
+    if testset:
+        no_etalon = testset - etalons
+        for e in no_etalon:
+            log_error(e, 'no etalon found')
+        etalons &= testset
+        no_testf = testset - tocomps
+        for t in no_testf:
+            log_error(t, 'no test file found ')
+        tocomps &= testset
+        return sorted(etalons & tocomps)
+    #------------------------------------------------
+    ignore = { f+EXTENSION for f in IGNORE }
+    etalons -= ignore
+    tocomps -= ignore
+    #------------------------------------------------
     etalon_only = etalons - tocomps
     tocomp_only = tocomps - etalons
     for e in etalon_only:
@@ -250,10 +268,12 @@ def show_summary(passed, extra_msg):
         print('Something is strange: Are the directories empty?')
     if ETALON_DIR==TOCOMP_DIR:
         print('WARNING: The etalon directory has been compared to itself!')
+    # FIXME Warn about ignored files or if only a subset of files were tested
 
 def create_header(extra_msg):
     with closing(StringIO()) as out:
-        out.write( extra_msg + '\n' )
+        if extra_msg:
+            out.write( extra_msg + '\n' )
         out.write('Etalon directory: "{}"\n'.format(ETALON_DIR))
         out.write('Compared against: "{}"\n'.format(TOCOMP_DIR))
         return out.getvalue()  
