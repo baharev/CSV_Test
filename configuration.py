@@ -18,9 +18,9 @@ TOCOMP_DIR = '/tmp/sg2ps_tests/to_compare'
 SPREADSHEETS_DIR = '/tmp/sg2ps_tests/result'
 LOGFILE = 'log.txt'
 
-TESTSET = [ ] # [ 'A003' ]
+TESTSET = [ ] # [ 'A003', 'A008' ]
 
-IGNORE = [ 'A006' ]
+IGNORE = [ ] # [ 'A006' ]
 
 # Extension of the input CSV files (both the etalon and the test files). All 
 # other file types will be ignored in the comparison.

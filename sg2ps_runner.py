@@ -65,9 +65,12 @@ def main():
     print('from "{}" to "{}"'.format(RGF_FOLDER, TOCOMP_DIR))
     
     projects = collect_project_names(to_cp)
+    if projects is None:
+        return # the error message has been logged already
     if not projects:
         print('Something is wrong, no projects found...')
         return
+    
     # Run the sg2ps executable on the projects in TOCOMP_DIR 
     for f in projects:
         cmd = [SG2PS_EXE, FLAG, f]
@@ -117,6 +120,7 @@ def collect_project_names(to_cp):
         if missing:
             print('The following files in the test set are missing:')
             print(missing)
+            return None
         return sorted(projects & testset)
     #
     projects.difference_update(IGNORE)
