@@ -43,10 +43,18 @@ TMP_ROOT = 'D:\\tmp' if IS_WIN else '/tmp'
 # WARNING: This directory will be *deleted* every time sg2ps_runner.py is run!
 TOCOMP_DIR = join(TMP_ROOT, 'sg2ps_tests', 'to_compare')
 
+# Save the console output of sg2ps into a <project name>.log file
+LOG_EXT = '.log'
+
 # The spreadsheets show where the errors were detected.
 # Careful: all .xlsx files and the log file will be deleted on startup!
 SPREADSHEETS_DIR = join(TMP_ROOT, 'sg2ps_tests', 'results')
 LOGFILE = 'log.txt'
+
+
+TESTSET = [ ] # [ 'A003', 'A008' ]
+
+IGNORE = [ ] # [ 'A006' ]
 
 # The last character of the column name encodes the type. Here we map that 
 # charater to a type.
