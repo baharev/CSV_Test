@@ -51,10 +51,13 @@ LOG_EXT = '.log'
 SPREADSHEETS_DIR = join(TMP_ROOT, 'sg2ps_tests', 'results')
 LOGFILE = 'log.txt'
 
+# If empty, all the RGF files in the RGF_FOLDER are considered. If not empty,
+# only the listed projects will be tested. Only the project names should be 
+# given, without the file extension.
+TESTSET = [ ] # [ 'some_project', 'another_project' ]
 
-TESTSET = [ ] # [ 'A003', 'A008' ]
-
-IGNORE = [ ] # [ 'A006' ]
+# These projects will be ignored
+IGNORE = [ ]
 
 # The last character of the column name encodes the type. Here we map that 
 # charater to a type.
