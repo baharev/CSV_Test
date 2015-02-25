@@ -12,7 +12,7 @@ from shutil import rmtree, copy
 
 # A hackish way to import the configuration
 sys.path.append(dirname(__file__))
-from configuration import ETALON_DIR, TOCOMP_DIR, EXTENSION
+from configuration import ETALON_DIR, TOCOMP_DIR, EXTENSION, TESTSET, IGNORE
 from csv_test import main as csvtest_main
 
 #===============================================================================
@@ -64,9 +64,7 @@ def main():
     print('Copied', len(to_cp), 'files ', end='')
     print('from "{}" to "{}"'.format(RGF_FOLDER, TOCOMP_DIR))
     
-    # Collect the project names
-    # FIXME Consider testset and ignore here!
-    projects = [f[:-len(INPUT_EXT)] for f in to_cp if f.endswith(INPUT_EXT)]
+    projects = collect_project_names(to_cp)
     if not projects:
         print('Something is wrong, no projects found...')
         return
@@ -108,6 +106,21 @@ def main():
         csvtest_main('RGF files are in: "{}"'.format(RGF_FOLDER))
     else:
         print('Not running tests as requested; we are done!')
+
+
+def collect_project_names(to_cp):
+    # TODO Keep in sync with csv_test which also does something similar
+    projects = { f[:-len(INPUT_EXT)] for f in to_cp if f.endswith(INPUT_EXT) }
+    testset = set(TESTSET)
+    if testset:
+        missing = sorted(testset - projects)
+        if missing:
+            print('The following files in the test set are missing:')
+            print(missing)
+        return sorted(projects & testset)
+    #
+    projects.difference_update(IGNORE)
+    return sorted(projects)
 
 
 def is_there_path_error():
