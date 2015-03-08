@@ -23,8 +23,6 @@ from configuration import *
 #      Remove all exit() from sg2ps executable, throw test_finished exception?
 #      Test failures can be tested as well
 #
-#      Create etalon and etalon_rgf folders in the sg2ps source tree
-#
 #-------------------------------------------------------------------------------
 
 errors = { }
