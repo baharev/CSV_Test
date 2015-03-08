@@ -75,7 +75,8 @@ def main():
     
     if RUN_CSVTEST:
         print('Invoking CSV test now\n')
-        csvtest_main('RGF files are in: "{}"'.format(RGF_FOLDER))
+        extra_msg_in_header = 'RGF files are in: "{}"'.format(RGF_FOLDER) 
+        csvtest_main(extra_msg_in_header)
     else:
         print('Not running tests as requested; we are done!')
 
@@ -97,9 +98,8 @@ def collect_project_names(to_cp):
 
 
 def get_new_csv_files(directory, previous_files):
-    csv_files = { f for f in listdir(directory) 
-                     if isfile(join(directory, f)) and f.endswith(EXTENSION) } 
-    return sorted(csv_files - previous_files)
+    return sorted( f for f in listdir(directory) if f not in previous_files 
+                     and isfile(join(directory, f)) and f.endswith(EXTENSION) )
 
 
 def is_there_path_error():
