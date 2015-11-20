@@ -14,7 +14,8 @@ IS_WIN = system()=='Windows'
 
 #-------------------------------------------------------------------------------
 # Run the SG2PS executable in a debugger. If it crashes, we get a stack trace.
-# Requires that the executable is compiled with -ggdb3 and -O0 or -Og.
+# Assumes that the stacktrace.gdb is in the etalon rgf folder.
+# Useful if the sg2ps executable is compiled with -ggdb3 and -O0 or -Og.
 RUN_IN_DEBUGGER = False
 
 # This is the directory where the git repo (Eclipse project) of SG2PS lives
