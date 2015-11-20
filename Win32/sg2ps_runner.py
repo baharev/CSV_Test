@@ -12,8 +12,9 @@ from shutil import rmtree, copy
 
 # A hackish way to import the configuration
 sys.path.append(dirname(__file__))
-from configuration import RGF_FOLDER, INPUT_EXT, ETALON_DIR, TOCOMP_DIR, \
-                          EXTENSION, SG2PS_EXE, FLAG, TESTSET, IGNORE, LOG_EXT
+from configuration import RUN_IN_DEBUGGER, RGF_FOLDER, INPUT_EXT, ETALON_DIR, \
+                          TOCOMP_DIR, EXTENSION, SG2PS_EXE, FLAG, TESTSET, \
+                          IGNORE, LOG_EXT
 from csv_test import main as csvtest_main
 
 def main():
